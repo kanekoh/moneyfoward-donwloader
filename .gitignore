@@ -1,0 +1,22 @@
+# 認証情報・シークレット
+.env
+credentials.json
+.mf_session.json
+.gdrive_token.json
+
+# ユーザー固有の設定（config.example.json をコピーして編集）
+config.json
+
+# ダウンロードファイル
+downloads/
+
+# デバッグ用スクリーンショット
+*.png
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Windows からダウンロードした際のメタデータ
+*:Zone.Identifier

@@ -1,0 +1,15 @@
+{
+  "keep_generations": 5,
+  "groups": [
+    {
+      "label": "no_group",
+      "group_id": "0",
+      "drive_filename": "資産推移_グループ選択なし.csv"
+    },
+    {
+      "label": "my_group",
+      "group_id": "YOUR_GROUP_ID_HASH",
+      "drive_filename": "資産推移_マイグループ.csv"
+    }
+  ]
+}
