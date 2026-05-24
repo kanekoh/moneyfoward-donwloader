@@ -11,5 +11,26 @@
       "group_id": "YOUR_GROUP_ID_HASH",
       "drive_filename": "資産推移_マイグループ.csv"
     }
+  ],
+  "spreadsheet_id": "YOUR_GOOGLE_SPREADSHEET_ID",
+  "sheet_gid": 0,
+  "manual_accounts": [
+    {
+      "mf_name": "MoneyForward上の口座名",
+      "type": "fx",
+      "currency": "AUD",
+      "cell": "B2"
+    },
+    {
+      "mf_name": "MoneyForward上の口座名2",
+      "type": "stock_us",
+      "ticker": "IBM",
+      "cell": "C4"
+    },
+    {
+      "mf_name": "MoneyForward上の口座名3",
+      "type": "value_jpy",
+      "cell": "H7"
+    }
   ]
 }
