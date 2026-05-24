@@ -96,40 +96,35 @@ cp config.example.json config.json
 
 ## 使い方
 
-### 資産推移 CSV のダウンロード
+すべての操作は `update.sh` から行います。
 
 ```bash
-# 通常実行（CSV ダウンロード + Google Drive アップロード）
+# 両方実行（デフォルト）: ポートフォリオ更新 → CSV ダウンロード
 ./update.sh
 
-# Google Drive アップロードをスキップ
+# ポートフォリオ更新のみ
+./update.sh --portfolio-only
+
+# CSV ダウンロードのみ
+./update.sh --csv-only
+
+# ポートフォリオの計算確認のみ（MoneyForward は更新しない）、CSV は通常実行
+./update.sh --dry-run
+
+# Drive へのアップロードをスキップ（CSV のみに適用）
 ./update.sh --no-upload
 
-# セッションをリセットして再ログイン（2FA が必要）
+# MoneyForward セッションをリセットして再ログイン（両方に適用）
 ./update.sh --clear-session
 
 # 利用可能なグループ一覧を表示（config.json の group_id 確認用）
 ./update.sh --list-groups
 ```
 
-### 手入力口座の時価更新
-
-```bash
-# 計算結果の確認のみ（MoneyForward は更新しない）
-set -a && source .env && set +a
-python3 update_portfolio.py --dry-run
-
-# 実際に MoneyForward を更新
-set -a && source .env && set +a
-python3 update_portfolio.py
-
-# セッションをリセットして再ログイン
-python3 update_portfolio.py --clear-session
-```
-
-実行例：
+実行例（`./update.sh`）：
 
 ```
+>>> ポートフォリオ更新
 Google Spreadsheet から保有データを読み込んでいます...
 
 市場価格・為替レートを取得しています（Yahoo Finance）...
@@ -145,24 +140,17 @@ Google Spreadsheet から保有データを読み込んでいます...
   Kyndryl: 33.19 株 × $12.29 × ¥159.1550 = 64,920 円
   金・銀・プラチナ: 2,323,836 円
 
-MoneyForward を更新しています...
-  ✓ Choice: 822,418 円
-  ✓ eSaver: 13,671,504 円
-  ✓ IBM: 36,069,035 円
-  ✓ Kyndryl: 64,920 円
-  ✓ 金・銀・プラチナ: 2,323,836 円
-
 更新完了。
+
+>>> CSV ダウンロード
+...
 ```
 
 ## cron 設定例
 
 ```cron
-# 毎日 8:00 に CSV ダウンロード
+# 毎日 8:00 にポートフォリオ更新 + CSV ダウンロード
 0 8 * * * /home/hiroyuki/moneyforward/update.sh >> /home/hiroyuki/moneyforward/update.log 2>&1
-
-# 毎日 8:05 に口座時価更新
-5 8 * * * cd /home/hiroyuki/moneyforward && set -a && source .env && set +a && python3 update_portfolio.py >> update_portfolio.log 2>&1
 ```
 
 ## 外部化されている設定一覧
