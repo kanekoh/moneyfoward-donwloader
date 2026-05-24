@@ -135,6 +135,13 @@ def _login(page, email: str, password: str) -> None:
     print(f"  [URL after password] {page.url}")
 
     if "email_otp" in page.url or "two_factor" in page.url:
+        if not sys.stdin.isatty():
+            print(
+                "エラー: 2段階認証が必要ですが非対話モード（cron 等）で実行されています。\n"
+                "セッションを更新するには手動で ./update.sh --clear-session を実行してください。",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         print(f"2段階認証が必要です。{email} に届いた6桁のコードを入力してください。")
         code = input("認証コード: ").strip()
         page.fill('input[name="email_otp"]', code)
@@ -296,6 +303,13 @@ def _gdrive_service():
             if not GDRIVE_CREDENTIALS.exists():
                 print(f"credentials.json が見つかりません: {GDRIVE_CREDENTIALS}", file=sys.stderr)
                 print("Google Cloud Console で OAuth2 認証情報を作成し、credentials.json として保存してください。", file=sys.stderr)
+                sys.exit(1)
+            if not sys.stdin.isatty():
+                print(
+                    "エラー: Google Drive の認証が必要ですが非対話モード（cron 等）で実行されています。\n"
+                    ".gdrive_token.json を削除して手動で ./update.sh を実行し、再認証してください。",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(GDRIVE_CREDENTIALS), GDRIVE_SCOPES

@@ -59,6 +59,13 @@ def _sheets_creds():
         else:
             if not GDRIVE_CREDENTIALS.exists():
                 sys.exit("credentials.json が見つかりません。Google Cloud Console からダウンロードしてください。")
+            if not sys.stdin.isatty():
+                print(
+                    "エラー: Google Sheets の認証が必要ですが非対話モード（cron 等）で実行されています。\n"
+                    ".sheets_token.json を削除して手動で python3 update_portfolio.py --dry-run を実行し、再認証してください。",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
             flow = InstalledAppFlow.from_client_secrets_file(str(GDRIVE_CREDENTIALS), SHEETS_SCOPES)
             creds = flow.run_local_server(port=0, open_browser=False, timeout_seconds=300)
         SHEETS_TOKEN.write_text(creds.to_json())
@@ -193,6 +200,13 @@ def _login(page, email: str, password: str) -> None:
     except PlaywrightTimeout:
         pass
     if "email_otp" in page.url or "two_factor" in page.url:
+        if not sys.stdin.isatty():
+            print(
+                "エラー: 2段階認証が必要ですが非対話モード（cron 等）で実行されています。\n"
+                "セッションを更新するには手動で ./update.sh --clear-session を実行してください。",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         email_addr = os.environ.get("MF_EMAIL", "")
         print(f"2段階認証コードを {email_addr} に送信しました。")
         code = input("認証コード: ").strip()
@@ -220,44 +234,38 @@ def _ensure_logged_in(page, context, email: str, password: str) -> None:
 # ---------------------------------------------------------------------------
 
 def _update_account(page, mf_name: str, jpy_value: int) -> bool:
-    """口座名を探してモーダルで値を更新する。ページはポートフォリオページであること。"""
+    """Bootstrap モーダルを使わず JS でフォームを直接 submit して値を更新する。"""
+    # ページ内のモーダルを name フィールドで探し、値をセットして submit
+    result = page.evaluate(f"""
+        (() => {{
+            const target = {json.dumps(mf_name)};
+            for (const modal of document.querySelectorAll('div.modal[id^="modal_asset"]')) {{
+                const nameInput = modal.querySelector('input[name="user_asset_det[name]"]');
+                if (!nameInput || nameInput.value.trim() !== target) continue;
+                const form    = modal.querySelector('form');
+                const valInput = modal.querySelector('input[name="user_asset_det[value]"]');
+                if (!form || !valInput) return 'no_form';
+                valInput.value = String({jpy_value});
+                form.submit();
+                return 'ok';
+            }}
+            return 'not_found';
+        }})()
+    """)
+
+    if result != 'ok':
+        print(f"  ✗ {mf_name}: モーダルが見つかりません（{result}）", file=sys.stderr)
+        return False
+
+    # form.submit() によるページ遷移を待つ
     try:
-        # 口座名を含む行の変更ボタンを探す（前後スペース対応）
-        edit_btn = page.locator(
-            f'tr:has(td:has-text("{mf_name}")) a.btn-asset-action[href*="#modal_asset"]'
-        ).first
-        edit_btn.wait_for(state="visible", timeout=8_000)
-
-        modal_id = edit_btn.get_attribute("href").lstrip("#")
-
-        # モーダルを開く
-        edit_btn.click()
-        page.wait_for_timeout(800)
-
-        # フォームに値を入力
-        modal = page.locator(f"#{modal_id}")
-        val_input = modal.locator('input[name="user_asset_det[value]"]')
-        val_input.wait_for(state="visible", timeout=5_000)
-        val_input.fill(str(jpy_value))
-
-        # 送信（ページリロードが発生する）
-        try:
-            with page.expect_navigation(wait_until="commit", timeout=15_000):
-                modal.locator('input[value="この内容で登録する"]').click()
-        except PlaywrightTimeout:
-            pass
-        page.wait_for_timeout(4_000)
-
-        print(f"  ✓ {mf_name}: {jpy_value:,} 円")
-        return True
-
+        page.wait_for_url("**/bs/portfolio**", wait_until="commit", timeout=15_000)
     except PlaywrightTimeout:
-        page.screenshot(path=f"/tmp/mf_update_error_{mf_name}.png", full_page=True)
-        print(f"  ✗ {mf_name}: タイムアウト（/tmp/mf_update_error_{mf_name}.png）", file=sys.stderr)
-        return False
-    except Exception as e:
-        print(f"  ✗ {mf_name}: {e}", file=sys.stderr)
-        return False
+        pass
+    page.wait_for_timeout(3_000)
+
+    print(f"  ✓ {mf_name}: {jpy_value:,} 円")
+    return True
 
 
 # ---------------------------------------------------------------------------

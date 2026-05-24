@@ -19,6 +19,33 @@ set +a
 
 cd "$SCRIPT_DIR"
 
+# ---------------------------------------------------------------------------
+# Slack 通知
+# ---------------------------------------------------------------------------
+slack_notify() {
+    local msg="$1"
+    if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
+        curl -s -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"$msg\"}" \
+            "$SLACK_WEBHOOK_URL" > /dev/null || true
+    fi
+}
+
+# エラー時に Slack 通知を送って終了
+on_error() {
+    local exit_code=$?
+    local line=$1
+    slack_notify ":x: *MoneyForward 更新失敗*
+ホスト: $(hostname)
+日時: $(date '+%Y-%m-%d %H:%M:%S')
+終了コード: ${exit_code}（スクリプト行 ${line}）
+対処: \`./update.sh --clear-session\` で再認証、またはログを確認してください。"
+}
+trap 'on_error $LINENO' ERR
+
+# ---------------------------------------------------------------------------
+# 引数解析
+# ---------------------------------------------------------------------------
 RUN_PORTFOLIO=true
 RUN_CSV=true
 PORTFOLIO_ARGS=()
@@ -53,6 +80,9 @@ for arg in "$@"; do
     esac
 done
 
+# ---------------------------------------------------------------------------
+# 実行
+# ---------------------------------------------------------------------------
 if $RUN_PORTFOLIO; then
     echo ">>> ポートフォリオ更新"
     python3 "$SCRIPT_DIR/update_portfolio.py" "${PORTFOLIO_ARGS[@]+"${PORTFOLIO_ARGS[@]}"}"
