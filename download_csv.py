@@ -28,7 +28,7 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 
 _print = print
 def print(*args, **kwargs):
-    _print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}]", *args, **kwargs)
+    _print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}]", *args, **kwargs)
 
 
 LOGIN_URL = "https://moneyforward.com/sign_in"

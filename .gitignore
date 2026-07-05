@@ -21,3 +21,7 @@ __pycache__/
 
 # Windows からダウンロードした際のメタデータ
 *:Zone.Identifier
+
+# 不要データ
+.update.log
+.claude
