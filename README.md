@@ -150,7 +150,13 @@ Google Spreadsheet から保有データを読み込んでいます...
 
 ```cron
 # 毎日 8:00 にポートフォリオ更新 + CSV ダウンロード
-0 8 * * * /home/hiroyuki/moneyforward/update.sh >> /home/hiroyuki/moneyforward/update.log 2>&1
+0 8 * * * /path/to/moneyforward/update.sh >> /path/to/moneyforward/update.log 2>&1
+```
+
+セッションが切れた場合（数週間〜数ヶ月に一度）は手動で再認証してください：
+
+```bash
+./update.sh --clear-session
 ```
 
 ## 外部化されている設定一覧

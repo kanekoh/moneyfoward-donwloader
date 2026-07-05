@@ -83,12 +83,18 @@ done
 # ---------------------------------------------------------------------------
 # 実行
 # ---------------------------------------------------------------------------
+ts() { date '+%Y-%m-%d %H:%M:%S'; }
+
+echo "[$(ts)] === update.sh 実行開始 ==="
+
 if $RUN_PORTFOLIO; then
-    echo ">>> ポートフォリオ更新"
+    echo "[$(ts)] >>> ポートフォリオ更新"
     python3 "$SCRIPT_DIR/update_portfolio.py" "${PORTFOLIO_ARGS[@]+"${PORTFOLIO_ARGS[@]}"}"
 fi
 
 if $RUN_CSV; then
-    echo ">>> CSV ダウンロード"
+    echo "[$(ts)] >>> CSV ダウンロード"
     python3 "$SCRIPT_DIR/download_csv.py" "${CSV_ARGS[@]+"${CSV_ARGS[@]}"}"
 fi
+
+echo "[$(ts)] === update.sh 実行終了 ==="

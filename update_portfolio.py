@@ -10,6 +10,7 @@ Google 認証: credentials.json が必要（初回のみブラウザ認証 → .
 """
 
 import argparse
+import datetime
 import json
 import os
 import platform
@@ -18,6 +19,10 @@ import sys
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+
+_print = print
+def print(*args, **kwargs):
+    _print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}]", *args, **kwargs)
 
 
 PORTFOLIO_URL       = "https://moneyforward.com/bs/portfolio"
