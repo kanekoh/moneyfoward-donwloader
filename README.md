@@ -153,6 +153,8 @@ Google Spreadsheet から保有データを読み込んでいます...
 0 8 * * * /path/to/moneyforward/update.sh >> /path/to/moneyforward/update.log 2>&1
 ```
 
+`update.log` が 5MB を超えると `update.sh` が自動でローテーションします（`update.log.1`〜`update.log.5` を保持、それより古い世代は削除）。system 側の logrotate 設定は不要です。
+
 セッションが切れた場合（数週間〜数ヶ月に一度）は手動で再認証してください：
 
 ```bash

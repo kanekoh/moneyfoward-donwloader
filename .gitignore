@@ -23,5 +23,5 @@ __pycache__/
 *:Zone.Identifier
 
 # 不要データ
-.update.log
+update.log*
 .claude

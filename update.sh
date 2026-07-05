@@ -20,6 +20,27 @@ set +a
 cd "$SCRIPT_DIR"
 
 # ---------------------------------------------------------------------------
+# ログローテーション（cron の `>> update.log` で肥大化し続けるのを防ぐ）
+# ---------------------------------------------------------------------------
+LOG_FILE="$SCRIPT_DIR/update.log"
+LOG_MAX_BYTES=$((5 * 1024 * 1024))  # 5MB
+LOG_KEEP=5
+
+rotate_log() {
+    [ -f "$LOG_FILE" ] || return 0
+    local size
+    size=$(stat -c%s "$LOG_FILE" 2>/dev/null || stat -f%z "$LOG_FILE" 2>/dev/null || echo 0)
+    [ "$size" -ge "$LOG_MAX_BYTES" ] || return 0
+
+    rm -f "$LOG_FILE.$LOG_KEEP"
+    for ((i = LOG_KEEP - 1; i >= 1; i--)); do
+        [ -f "$LOG_FILE.$i" ] && mv "$LOG_FILE.$i" "$LOG_FILE.$((i + 1))"
+    done
+    mv "$LOG_FILE" "$LOG_FILE.1"
+}
+rotate_log
+
+# ---------------------------------------------------------------------------
 # Slack 通知
 # ---------------------------------------------------------------------------
 slack_notify() {
